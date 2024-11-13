@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AuthApp",
+    "name": "My Home",
     "slug": "AuthApp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,13 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.maridogabriel.AuthApp"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.maridogabriel.AuthApp"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +38,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "54b26c9d-e243-4b81-80c0-736f7e6fffa1"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Button, Text, Alert } from 'react-native';
+import { View, Button, Text, Alert, StyleSheet } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -39,8 +39,26 @@ export default function BiometricAuth() {
       {isAuthenticated ? (
         <Text>Bem-vindo(a)!</Text>
       ) : (
-        <Button title="Autenticar com Face ID/Impressão Digital" onPress={handleBiometricAuth} />
+        <View >
+          <Text style={styles.botao} onPress={handleBiometricAuth}>Entrar</Text>
+        </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  botao: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: 'center',
+    color: "#000000",
+    fontSize: 20,
+    width: 111,
+    alignSelf: "center",
+    textAlign: "center"
+  },
+});

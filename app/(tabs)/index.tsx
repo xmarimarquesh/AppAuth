@@ -1,40 +1,94 @@
-import React, { useState } from 'react';
-import { View, Button, Text, Alert } from 'react-native';
-import * as LocalAuthentication from 'expo-local-authentication';
 
-export default function TabsScreen() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-  const handleAuthForUpdate = async () => {
-    const compatible = await LocalAuthentication.hasHardwareAsync();
-    if (!compatible) {
-      Alert.alert("Erro", "Este dispositivo não suporta autenticação biométrica");
-      return;
-    }
+export default function HomeScreen() {
+  const [name, setName] = useState('');
+  const [isNameStored, setIsNameStored] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
 
-    const enrolled = await LocalAuthentication.isEnrolledAsync();
-    if (!enrolled) {
-      Alert.alert("Erro", "Nenhuma biometria configurada no dispositivo");
-      return;
-    }
+  useEffect(() => {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long', 
+      day: '2-digit',
+      month: 'long',
+    };
+    
+    
+    const formattedDate = now.toLocaleDateString('en-US', options);
+    setCurrentDate(formattedDate);
+  }, []);
 
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Autentique-se para realizar a atualização",
-      fallbackLabel: "Use sua senha",
-    });
+  useEffect(() => {
+    // Função para carregar o nome armazenado, se existir
+    const loadName = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('userName');
+        if (storedName) {
+          setName(storedName);
+          setIsNameStored(true);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
 
-    if (result.success) {
-      Alert.alert("Sucesso", "Porta principal aberta");
-    } else {
-      Alert.alert("Erro", "Não foi possível abrir a porta principal");
+    loadName();
+  }, []);
+
+  // Função para salvar o nome do usuário
+  const handleSaveName = async () => {
+    try {
+      await AsyncStorage.setItem('userName', name);
+      setIsNameStored(true);
+    } catch (e) {
+      console.log(e);
     }
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>TEXTO DAS TABS</Text>
-
-      <Button title="Abrir porta principal" onPress={handleAuthForUpdate} />
+    <View style={styles.container}>
+      {isNameStored ? (
+        <>
+          <Text style={styles.greeting}>Welcome home, {name}</Text>
+          <Text>{currentDate}</Text>
+        </>
+      ) : (
+        <View>
+          <Text>Digite seu nome:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Seu nome"
+            value={name}
+            onChangeText={setName}
+          />
+          <Button title="Salvar nome" onPress={handleSaveName} />
+        </View>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    marginVertical: 10,
+    width: 200,
+  },
+});
+
