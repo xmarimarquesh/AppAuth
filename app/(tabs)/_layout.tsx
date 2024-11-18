@@ -1,13 +1,11 @@
-import { Stack } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
 
 export default function MainLayout() {
   return (
-    <Stack>
-      <Stack.Screen 
-        name="index" 
-        options={{ headerShown: false }} // Define que o cabeçalho não será exibido
-      />
-    </Stack>
+    <Tabs>
+      <Tabs.Screen name='index' options={{headerShown: false}}></Tabs.Screen>
+      <Tabs.Screen name='naosei' options={{headerShown: false}}></Tabs.Screen>
+    </Tabs>
   );
 }
