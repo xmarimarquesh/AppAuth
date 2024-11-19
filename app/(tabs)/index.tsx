@@ -10,14 +10,20 @@ import { Garage } from '@/components/Garage';
 import { Pool } from '@/components/Pool';
 import { Bathroom } from '@/components/Bathroom';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { listenToData } from '@/firebase/firebaseDatabase'
 
 export default function HomeScreen() {
   const [name, setName] = useState('');
   const [isNameStored, setIsNameStored] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
-  const [selectedRoomInfo, setSelectedRoomInfo] = useState('')
+  const [selectedRoomInfo, setSelectedRoomInfo] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
+  // Estados para armazenar dados do Firebase (temperatura, umidade, etc.)
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [humidity, setHumidity] = useState<number | null>(null);
+  const [light, setLight] = useState<number | null>(null);
+
   const handleAuthForUpdate = async () => {
     const compatible = await LocalAuthentication.hasHardwareAsync();
     if (!compatible) {
@@ -43,7 +49,6 @@ export default function HomeScreen() {
     }
   };
 
-
   useEffect(() => {
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = {
@@ -54,6 +59,11 @@ export default function HomeScreen() {
     
     const formattedDate = now.toLocaleDateString('en-US', options);
     setCurrentDate(formattedDate);
+
+    listenToData('home/temperature', (data) => setTemperature(data));
+    listenToData('home/humidity', (data) => setHumidity(data));
+    listenToData('home/light', (data) => setLight(data));
+    
   }, []);
 
   useEffect(() => {
@@ -85,83 +95,92 @@ export default function HomeScreen() {
     setSelectedRoomInfo(`${room}`);
   };
 
+  // Escutar os dados do Firebase para atualizar a interface
+  useEffect(() => {
+    listenToData('sensors/temperature', (data) => setTemperature(data));
+    listenToData('sensors/humidity', (data) => setHumidity(data));
+    listenToData('sensors/light', (data) => setLight(data));
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-    <SafeAreaView style={styles.container_principal}>
-      <View style={styles.container_um}>
-        {isNameStored ? (
-          <>
-            <Text style={styles.greeting}>Welcome home, </Text>
-            <Text style={styles.greeting}>{name}</Text>
-            <Text style={styles.greeting1}>{currentDate}</Text>
-          </>
-        ) : (
-          <View style={styles.container_dois}>
-            <Text>Digite seu nome:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Seu nome"
-              value={name}
-              onChangeText={setName}
-            />
-            <Button title="Salvar nome" onPress={handleSaveName} />
+      <SafeAreaView style={styles.container_principal}>
+        <View style={styles.container_um}>
+          {isNameStored ? (
+            <>
+              <Text style={styles.greeting}>Welcome home, </Text>
+              <Text style={styles.greeting}>{name}</Text>
+              <Text style={styles.greeting1}>{currentDate}</Text>
+            </>
+          ) : (
+            <View style={styles.container_dois}>
+              <Text>Digite seu nome:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Seu nome"
+                value={name}
+                onChangeText={setName}
+              />
+              <Button title="Salvar nome" onPress={handleSaveName} />
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.container_dois}>
+          <View style={styles.cards}>
+            <View style={styles.cards_deitados}>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Living Room')}>
+                <Card image={require('../../assets/images/sala-de-estar.png')} title='Living Room' />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Bedroom')}>
+                <Card image={require('../../assets/images/quarto.png')} title='Bedroom' />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Kitchen')}>
+                <Card image={require('../../assets/images/cozinha.png')} title='Kitchen' />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.cards_deitados}>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Bathroom')}>
+                <Card image={require('../../assets/images/banheiro.png')} title='Bathroom' />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Garage')}>
+                <Card image={require('../../assets/images/garagem.png')} title='Garage' />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedRoomInfo('Pool')}>
+                <Card image={require('../../assets/images/piscina.png')} title='Pool' />
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-      </View>
-      
-      <View style={styles.container_dois}>
-        <View style={styles.cards}>
-          <View style={styles.cards_deitados}>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Living Room')}>
-              <Card image={require('../../assets/images/sala-de-estar.png')} title='Living Room' />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Bedroom')}>
-              <Card image={require('../../assets/images/quarto.png')} title='Bedroom' />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Kitchen')}>
-              <Card image={require('../../assets/images/cozinha.png')} title='Kitchen' />
-            </TouchableOpacity>
+          <View style={styles.infos}>
+            <Text style={styles.roomInfo}>{selectedRoomInfo}</Text>
+            <Text>Temperature: {temperature}°C</Text>
+            <Text>Humidity: {humidity}%</Text>
+            <Text>Light: {light} lux</Text>
+            {(() => {
+              switch (selectedRoomInfo) {
+                case 'Living Room':
+                  return <LivingRoom />;
+                case 'Bedroom':
+                  return <Bedroom />;
+                case 'Kitchen':
+                  return <Kitchen />;
+                case 'Bathroom':
+                  return <Bathroom />;
+                case 'Garage':
+                  return <Garage />;
+                case 'Pool':
+                  return <Pool />;
+                default:
+                  return <Text style={styles.roomInfo}>Select a room to see more details</Text>;
+              }
+            })()}
           </View>
-          <View style={styles.cards_deitados}>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Bathroom')}>
-              <Card image={require('../../assets/images/banheiro.png')} title='Bathroom' />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Garage')}>
-              <Card image={require('../../assets/images/garagem.png')} title='Garage' />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setSelectedRoomInfo('Pool')}>
-              <Card image={require('../../assets/images/piscina.png')} title='Pool' />
-            </TouchableOpacity>
+          <View>
+            <Text>Device</Text>
+            <Button title="Abrir porta principal" onPress={handleAuthForUpdate} />
           </View>
         </View>
-        <View style={styles.infos}>
-          <Text style={styles.roomInfo}>{selectedRoomInfo}</Text>
-          {(() => {
-            switch (selectedRoomInfo) {
-              case 'Living Room':
-                return <LivingRoom />;
-              case 'Bedroom':
-                return <Bedroom />;
-              case 'Kitchen':
-                return <Kitchen />;
-              case 'Bathroom':
-                return <Bathroom />;
-              case 'Garage':
-                return <Garage />;
-              case 'Pool':
-                return <Pool />;
-              default:
-                return <Text style={styles.roomInfo}>Select a room to see more details</Text>;
-            }
-          })()}
-        </View>
-        <View>
-          <Text>Device</Text>
-          <Button title="Abrir porta principal" onPress={handleAuthForUpdate} />
-        </View>
-      </View>
-
-    </SafeAreaView>
+      </SafeAreaView>
     </ScrollView> 
   );
 }
