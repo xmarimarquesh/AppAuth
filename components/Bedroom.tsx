@@ -1,36 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { listenToData, updateData } from '@/firebase/firebaseDatabase'; // Certifique-se que `updateData` está implementado
+import { listenToData, updateData } from '@/firebase/firebaseDatabase';
 
 export const Bedroom = () => {
   const [isLampOn, setisLampOn] = useState(false);
   const [isAirOn, setisAirOn] = useState(false);
 
-  // Atualiza o estado local e o Firebase
+  // ---- ATUALIZAR NO FIREBASE
   const toggleSwitchLamp = async () => {
     const newState = !isLampOn;
     setisLampOn(newState);
-    await updateData('home/bedroom/light', newState); // Atualiza no Firebase
+    await updateData('home/bedroom/light', newState);
   };
 
   const toggleSwitchAir = async () => {
     const newState = !isAirOn;
     setisAirOn(newState);
-    await updateData('home/bedroom/air', newState); // Atualiza no Firebase
+    await updateData('home/bedroom/air', newState);
   };
 
+  // ---- ATUALIZAR IMAGENS
   const imageSource = isLampOn
     ? require('../assets/images/lampada_ligada.png')  
     : require('../assets/images/lampada.png');
 
+  // ---- ESCUTAR MUDANÇAS DO FIREBASE E ATUALIZAR ESTADO LOCAL
   useEffect(() => {
-    // Escuta mudanças do estado da lâmpada no Firebase
-    const unsubscribeLamp = listenToData('sensors/lamp', (data) => {
-      setisLampOn(data); // Atualiza o estado local com os dados do Firebase
+    const unsubscribeLamp = listenToData('home/bedroom/light', (data) => {
+      setisLampOn(data);
     });
 
-    const unsubscribeAir = listenToData('sensors/air', (data) => {
-      setisAirOn(data); // Atualiza o estado local com os dados do Firebase
+    const unsubscribeAir = listenToData('home/bedroom/air', (data) => {
+      setisAirOn(data);
     });
 
     return () => {
@@ -59,15 +60,15 @@ export const Bedroom = () => {
 };
 
 const styles = StyleSheet.create({
-  img: {
-    width: 64,
-    height: 64,
-    margin: 12
-  },
   view_principal: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "center"
+  },
+  img: {
+    width: 64,
+    height: 64,
+    margin: 12
   },
   view: {
     display: 'flex',
