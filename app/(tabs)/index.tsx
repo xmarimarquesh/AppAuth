@@ -11,13 +11,13 @@ import { Pool } from '@/components/Pool';
 import { Bathroom } from '@/components/Bathroom';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { listenToData, updateData } from '@/firebase/firebaseDatabase'
+import { Camera } from 'expo-camera';
 
 export default function HomeScreen() {
   const [name, setName] = useState('');
   const [isNameStored, setIsNameStored] = useState(false);
   const [currentDate, setCurrentDate] = useState('');
   const [selectedRoomInfo, setSelectedRoomInfo] = useState('');
-
   const [temperature, setTemperature] = useState<number | null>(null);
   const [humidity, setHumidity] = useState<number | null>(null);
   const [door, setDoor] = useState<boolean | null>(null);
@@ -35,7 +35,7 @@ export default function HomeScreen() {
       return;
     }
 
-    const message = door ? "Authenticate to close the door" : "Authenticate to open the door"
+    const message = door ? "Authenticate to close the door" : "Authenticate to open the door";
 
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: message,
@@ -46,11 +46,11 @@ export default function HomeScreen() {
       const newState = !door;
       setDoor(newState);
       await updateData('home/door', newState);
-      if(newState)
+      if (newState) {
         Alert.alert("Success", "Main door open");
-      else
+      } else {
         Alert.alert("Success", "Main door closed");
-
+      }
     } else {
       Alert.alert("Error", "Unable to open the main door");
     }
@@ -72,14 +72,14 @@ export default function HomeScreen() {
       day: '2-digit',
       month: 'long',
     };
-    
+
     const formattedDate = now.toLocaleDateString('en-US', options);
     setCurrentDate(formattedDate);
 
     listenToData('home/temperature', (data) => setTemperature(data));
     listenToData('home/humidity', (data) => setHumidity(data));
     listenToData('home/door', (data) => setDoor(data));
-    
+
     const loadName = async () => {
       try {
         const storedName = await AsyncStorage.getItem('userName');
@@ -97,11 +97,11 @@ export default function HomeScreen() {
   }, []);
 
   const cadeadoSource = door
-    ? require('../../assets/images/cadeado-aberto.png')  
+    ? require('../../assets/images/cadeado-aberto.png')
     : require('../../assets/images/cadeado.png');
 
   const doorSource = door
-    ? require('../../assets/images/porta-aberta.png')  
+    ? require('../../assets/images/porta-aberta.png')
     : require('../../assets/images/porta.png');
 
   return (

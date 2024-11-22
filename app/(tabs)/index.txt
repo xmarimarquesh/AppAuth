@@ -1,0 +1,108 @@
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { Button, StyleSheet, Text, View } from 'react-native';
+
+// Tipando a referência corretamente para CameraView
+export default function HomeScreen() {
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const [capturing, setCapturing] = useState(false);
+
+  // Criando a referência da câmera com o tipo correto
+  const cameraRef = useRef<CameraView>(null);
+
+  // Controla a sequência de captura
+  useEffect(() => {
+    if (capturing) {
+      const interval = setInterval(() => {
+        capturePhoto();
+      }, 1000); // Captura uma foto a cada 1 segundo (ajuste conforme necessário)
+
+      // Limpa o intervalo quando a captura for parada
+      return () => clearInterval(interval);
+    }
+  }, [capturing]);
+
+  // Função para capturar a foto
+  const capturePhoto = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        
+        // Verifique se 'photo' não é undefined
+        if (photo && photo.uri) {
+          console.log('Foto tirada!', photo.uri); // Aqui você pode fazer o que quiser com a foto, como enviá-la para o backend
+        } else {
+          console.log('Falha ao capturar a foto.');
+        }
+      } catch (error) {
+        console.error('Erro ao tirar foto:', error);
+      }
+    }
+  };
+
+  // Verifica as permissões
+  if (!permission) {
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="Grant Permission" />
+      </View>
+    );
+  }
+
+  // Função para alternar entre as câmeras frontal e traseira
+  function toggleCameraFacing() {
+    setFacing((current) => (current === 'back' ? 'front' : 'back'));
+  }
+
+  // Inicia a captura de fotos automaticamente
+  const startCapturing = () => setCapturing(true);
+  const stopCapturing = () => setCapturing(false);
+
+  return (
+    <View style={styles.container}>
+      <CameraView
+        ref={cameraRef}  // Referência da câmera
+        style={styles.camera}
+        facing={facing}
+      />
+      <View style={styles.buttonContainer}>
+        <Button title="Start Capturing" onPress={startCapturing} />
+        <Button title="Stop Capturing" onPress={stopCapturing} />
+        <Button title="Flip Camera" onPress={toggleCameraFacing} />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  camera: {
+    flex: 1,
+    width: '100%',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
+});
+
